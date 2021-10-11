@@ -2,6 +2,7 @@
 addVals adds values to the created sql table.
 param msgTxt is the message in it's entirety, action is the action that jarvis
 should take ie. WEATHER, TIME etc 
+Call each time a new training question is asked.
 """
 def addVals(msgTxt, action):
     
