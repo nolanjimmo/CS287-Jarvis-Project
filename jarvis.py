@@ -107,7 +107,7 @@ def on_open(ws):
 
 if __name__ == "__main__":
     websocket.enableTrace(False)
-    headers = {'Content-type':'application/x-www-form-urlencoded', 'Authorization':'Bearer xapp-1-A02GFLAUZ0T-2578743379270-bf9c748d4bb04a350f475e17fca14182d0b565ed4093d68da04b4c812187466b'}
+    headers = {'Content-type':'application/x-www-form-urlencoded', 'Authorization':f'Bearer {APP_TOKEN}'}
     url = requests.post('https://slack.com/api/apps.connections.open', headers=headers).json()["url"]
     ws = websocket.WebSocketApp(url,
                               on_message = on_message,
