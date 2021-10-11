@@ -7,13 +7,14 @@ with open("tokens.txt", 'r') as infile:
     lines = infile.readlines()
 infile.close()
 
-API_TOKEN = lines[0]
-APP_TOKEN = lines[1]
+API_TOKEN = lines[0].strip()
+APP_TOKEN = lines[1].strip()
 
 # IMPORTS
 import websocket
 import requests
 import json
+from dataInsertion import addVals
 
 
 try:
@@ -25,6 +26,7 @@ import time
 ##Global Variables for training mode switch
 training_time = False # Training Mode Switch
 action_received = False
+action = ''
 
 def send_message(channel, text):
     data = {
@@ -38,6 +40,7 @@ def send_message(channel, text):
 def on_message(ws, message):
     global training_time
     global action_received
+    global action
     text = ''
     
     #This is the user value for when our bot sends messsages
@@ -54,14 +57,18 @@ def on_message(ws, message):
     text = message['payload']['event']['text']
     sent_from = message['payload']['event']['user']
     
+    #input message validation, making sure that Jarvis does not respond to
+    #itself, and that the message text is not empty
     if sent_from == sender:
+        return
+    if text == '':
         return
     
     print("CURRENT TEXT:", text)
-    
+    print(action_received)
     
     # ACTIONS - Get the first action and ask for more.
-    if text.lower() != 'training time' and training_time == True:
+    if text.lower() != 'training time' and text.lower() != "done" and training_time == True:
         if action_received == False:
             action = text.upper()
             print(action)
@@ -70,13 +77,11 @@ def on_message(ws, message):
             
         # Receive next action.
         elif action_received == True:
-            action = text.upper()
-            print(action)
+            #action = text.upper()
+            print(f"Entering {action}: {text}     in to database")
+            addVals(text, action)
             send_message(channel, "OK, I've got it! what else?")
-        
-        # Finsih training if requested.
-        else:
-            send_message(channel, "OK, I'm finished training")
+    
     
     # TRAINING TIME - start training upon user request!
     elif text.lower() == 'training time' and training_time == False:
@@ -85,6 +90,13 @@ def on_message(ws, message):
                 
         # Enable training mode!
         training_time = True
+        
+    #finish training time on keyword "done"
+    elif text.lower() == "done":
+        send_message(channel, "OK, I'm finished training")
+        training_time = False
+        action_received = False
+        action = ''
 
     
 
@@ -101,7 +113,7 @@ def on_open(ws):
         #     ws.send("Hello %d" % i)
         # time.sleep(20)
         # ws.close()
-        print("thread terminating...")
+        print("thread starting...")
     thread.start_new_thread(run, ())
 
 
