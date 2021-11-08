@@ -3,16 +3,16 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Nov  6 10:56:03 2021
-
 @author: christopheroneil
-
 secind iteration of jarvis's brain. 
 """
 
 import sqlite3
 import pickle
+import numpy as np
 
 from sklearn.model_selection import train_test_split
+from PredictOverride import PredictOverride
 conn = sqlite3.connect("jarvis.db")
 c = conn.cursor()
 
@@ -31,12 +31,11 @@ y = ["%s" % y for y in action]
 
 # Transorm labels to labels that the classifier can use.
 
-from sklearn.preprocessing import LabelEncoder
-encoder = LabelEncoder()
-y_encoded = encoder.fit_transform(y)
 
 # Split the data into training and testing sets. 
-X_train, X_test , y_train, y_test = train_test_split(X,y_encoded, test_size = .2, random_state = 42)
+X_train, X_test , y_train, y_test = train_test_split(X,y, test_size = .2, random_state = 42)
+
+
 
 # Contruct a pipeline that will convert X_train and X_test to count vectors
 # then train on X_train, then predict on X_test.
@@ -52,10 +51,10 @@ text_clf = Pipeline([
 text_clf.fit(X_train, y_train)
 prediction = text_clf.predict(X_test)
 
+
 # Display a classifcation report
 from sklearn.metrics import classification_report
 print(classification_report(y_test, prediction)) 
-
 
 # Save the model to the named file 
 file = "jarvis_MOUNTAINTIGER.pkl"
@@ -82,4 +81,3 @@ print(grid.best_estimator_)
 
 
 ###################### TESTING FOR HYPERPARAMS ################################
-
