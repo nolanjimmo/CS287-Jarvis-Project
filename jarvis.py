@@ -44,6 +44,8 @@ def addVals(msgTxt, action):
 training_time = False # Training Mode Switch
 action_received = False
 action = ''
+# Global variable for testing time
+testing_time = False
 
 def send_message(channel, text):
     data = {'token': API_TOKEN,
@@ -55,6 +57,7 @@ def send_message(channel, text):
 def on_message(ws, message):
     
     # Get global variables
+    global testing_time
     global training_time
     global action_received
     global action
@@ -110,6 +113,14 @@ def on_message(ws, message):
                 
         # Enable training mode!
         training_time = True
+        
+    elif text.lower() == 'testing time' and testing_time == False:
+        
+        #Respond asking for the test data
+        send_message(channel, "Ok, I'm ready for testing. Give me some data")
+        
+        # Enable Testing Mode
+        testing_time =  True
             
         
 
