@@ -32,4 +32,5 @@ while True:
     if flag[0].lower() == 'n':
         break
 
-
+for event in schedule:
+    print(event)
