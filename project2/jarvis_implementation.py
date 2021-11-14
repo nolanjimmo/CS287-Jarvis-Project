@@ -29,8 +29,16 @@ except ImportError:
 training_time = False # Training Mode Switch
 testing_time = False # Testing Mode Switch
 action_received = False
+classified = False
+q1 = False
+q2 = False
+q3 = False
 action = ''
 test = ''
+date_time = ''
+event_class = ''
+event_description = ''
+schedule = []
 
     
 def send_message(channel, text):
@@ -46,8 +54,11 @@ def on_message(ws, message):
     global training_time
     global testing_time
     global action_received
-    global action
-    global test
+    global classified
+    global q1, q2, q3
+    global action, test
+    global date_time, event_class, event_description
+    global schedule
     text = ''
     
     # This is the user value for when our bot sends messsages
@@ -110,37 +121,56 @@ def on_message(ws, message):
         
     # Identify action.
     elif text.lower() != 'testing time' and testing_time == True and training_time == False and text.lower() != 'done':
-        brain = pickle.load(open("jarvis_MOUNTAINTIGER.pkl", 'rb'))
-        result = brain.predict([text.lower()])
-        send_message(channel, "Ok, I think the action you mean is `{}`.\nWrite me something else an I'll try and figure it out.".format(result[0]))  
-        if result[0] == "TIME":
+        if classified == False:
+            brain = pickle.load(open("jarvis_MOUNTAINTIGER.pkl", 'rb'))
+            result = brain.predict([text.lower()])
+            send_message(channel, "Ok, I think the action you mean is `{}`.".format(result[0]))  
+        if classified == False and result[0] == 'TIME':
+            classified = True
             send_message(channel, "Do you wanna start a schedule: yes or no?")
-            if text[0].lower== 'y':
-                schedule =[]
-                while True:
-                    send_message(channel, "What do you want the date and time to be?")
-                    date_time = text
-                    send_message(channel, "What is the event for?")
-                    event_class = text
-                    send_message(channel, "What is the event?")
-                    event_description = text
-                    if len(schedule) == 0:
-                        schedule.append(Event(date_time, event_class, event_description))
-                    else:
-                        for event in schedule:
-                            if event == Event(date_time, event_class, event_description):
-                                send_message(channel, "There is conflicting times with this new event with: ")
-                                send_message(channel, event)
-                                continue
-                            else:
-                                schedule.append(Event(date_time, event_class, event_description))
-                    
-                    flag = send_message(channel, "Want to continue: yes or no? ")
-                    
-                    if flag[0].lower() == 'n':
-                        break
+        elif classified == True:
+            if text[0].lower() == 'y':
+                send_message(channel, "What do you want the date and time to be?")
+                q1 = True
+                return
+            elif text[0].lower() == 'n':
+                send_message(channel, "Okay, type something new to be classified")
+                classified = False
+                send_message(channel, "Here is your schedule: ")
                 for event in schedule:
-                        send_message(channel, event)
+                    send_message(channel, f"{event.get_date_time()}:  {event.get_event_description()}")
+                return
+            if q1:
+                date_time = text
+                send_message(channel, "What is the event for?")
+                q2 = True
+                q1 = False
+                return
+            if q2:
+                event_class = text
+                send_message(channel, "What is the event?")
+                q3 = True
+                q2 = False
+                return
+            if q3:
+                event_description = text
+                q3 = False
+            if len(schedule) == 0:
+                schedule.append(Event(date_time, event_class, event_description))
+                send_message(channel, f"Event added to your schedule: {schedule[len(schedule)-1].get_date_time()} {schedule[len(schedule)-1].get_event_description()}")
+            else:
+                new_event = Event(date_time, event_class, event_description)
+                for event in schedule:
+                    if event.get_date_time() == new_event.get_date_time():
+                        send_message(channel, "There is conflicting times with this new event with: ")
+                        send_message(channel, event.get_event_description())
+                        send_message(channel, "New Event not added to your schedule")
+                        continue
+                    else:
+                        schedule.append(new_event)
+                        send_message(channel, f"Event added to your schedule: {schedule[len(schedule)-1].get_date_time()} {schedule[len(schedule)-1].get_event_description()}")
+                        break
+            flag = send_message(channel, "Want to continue: yes or no? ")
     
     # Finish training if requested.
     elif text.lower() == 'done' and testing_time == True:
