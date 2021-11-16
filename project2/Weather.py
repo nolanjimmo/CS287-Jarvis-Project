@@ -23,7 +23,7 @@ class Weather():
         self.key = None
         self.read_key()
         self.city_zip = city_zip
-        self.temp, self.weather_description = self.fetch_weather()
+        self.temp, self.weather_description, self.wind_speed, self.humidity = self.fetch_weather()
     
     '''
     Getter for the current city
@@ -84,6 +84,36 @@ class Weather():
         return self.weather_description
     
     '''
+    Getter for the wind speed
+    
+    Paramaters
+    ---------
+    None
+    
+    Returns
+    -------
+    current wind speed
+    '''
+    def get_wind_speed(self):
+        self.update_weather()
+        return self.wind_speed
+    
+    '''
+    Getter for the humidity
+    
+    Paramaters
+    ---------
+    None
+    
+    Returns
+    -------
+    current humidity
+    '''
+    def get_humidity(self):
+        self.update_weather()
+        return self.humidity
+    
+    '''
     Getter for the aggregated weather as a whole
     
     Paramaters
@@ -95,7 +125,7 @@ class Weather():
     current temp and weather description in a string
     '''
     def get_weather(self):
-        return f"{self.get_temp()} {self.get_weather_description()}"
+        return f"{self.get_temp()}F {self.get_weather_description()}, Humidity: {self.get_humidity()} Wind Speed: {self.wind_speed}"
     
     '''
     Helper function to update the temperature and weather description vars
@@ -109,7 +139,7 @@ class Weather():
     None
     '''
     def update_weather(self):
-        self.temp, self.weather_description = self.fetch_weather()
+        self.temp, self.weather_description, self.wind_speed, self.humidity = self.fetch_weather()
 
     '''
     Function to query the API and set the temp and weather_description vars
@@ -133,7 +163,7 @@ class Weather():
             print("Weather data could not be loaded from API... request was 404")
             return 0, 0
         else:
-            return self.kelvin_to_fahrenheit(weather_data["main"]["temp"]), weather_data["weather"][0]["description"]
+            return self.kelvin_to_fahrenheit(weather_data["main"]["temp"]), weather_data["weather"][0]["description"], weather_data["wind"]["speed"], weather_data["main"]["humidity"]
         
     '''
     Helper function to convert temperatures

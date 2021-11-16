@@ -28,17 +28,22 @@ except ImportError:
 # Global Variables for training mode switch and testing mode switch
 training_time = False # Training Mode Switch
 testing_time = False # Testing Mode Switch
+scheduler_time = False # Scheduling app switch
 action_received = False
 classified = False
 q1 = False
 q2 = False
 q3 = False
+w1 = True
+w2 = False
 action = ''
 test = ''
 date_time = ''
 event_class = ''
 event_description = ''
+result = None
 schedule = []
+w = None
 
     
 def send_message(channel, text):
@@ -53,12 +58,15 @@ def on_message(ws, message):
     # Get global variables
     global training_time
     global testing_time
+    global scheduler_time
     global action_received
     global classified
-    global q1, q2, q3
+    global q1, q2, q3, w1, w2
     global action, test
     global date_time, event_class, event_description
+    global result
     global schedule
+    global w
     text = ''
     
     # This is the user value for when our bot sends messsages
@@ -112,33 +120,52 @@ def on_message(ws, message):
         # Enable training mode!
         training_time = True
     
- ##### TESTING TIME
- 
-    # Start training upon user request!
+##### TESTING TIME
     if text.lower() == 'testing time' and testing_time == False and training_time == False:
         send_message(channel, "I'm training my brain with the data you've already given me...\nOK, I'm ready for testing. Write me something and I'll try to figure it out.")
         testing_time = True
+        return
         
+    if text.lower() != 'testing_time' and testing_time == True:
+        send_message(channel, "Type something for me to classify and test if I am correct")
+        brain = pickle.load(open("jarvis_MOUNTAINTIGER.pkl", 'rb'))
+        result = brain.predict([text.lower()])
+        send_message(channel, "Ok, I think the action you mean is `{}`.".format(result[0])) 
+        return 
+ 
+##### IMPLEMENTATION
+    # help message
+    if text.lower() == 'help':
+        send_message(channel, "This is an app that will help with routine, automatable things/")
+        send_message(channel, "Type something to do with time and follow the prompts!")
+        send_message(channel, "Follow the prompts to assign a date/time, category and name for each event you would like to add.")
+        send_message(channel, "Dates must be entered in DD-MM-YYYY HH:MMAM, where AM can be AM or PM, and must not be separated from the time numbers with a space")
+                     
     # Identify action.
-    elif text.lower() != 'testing time' and testing_time == True and training_time == False and text.lower() != 'done':
+    if text.lower() == 'day planner time' and scheduler_time == False:
+        send_message(channel, "Opening day planner app...")
+        scheduler_time = True
+    
+    elif text.lower() != 'testing time' and text.lower() != "day planner time" and scheduler_time == True and text.lower() != 'done' and text.lower() != 'help':
         if classified == False:
             brain = pickle.load(open("jarvis_MOUNTAINTIGER.pkl", 'rb'))
             result = brain.predict([text.lower()])
-            send_message(channel, "Ok, I think the action you mean is `{}`.".format(result[0]))  
+            #send_message(channel, "Ok, I think the action you mean is `{}`.".format(result[0]))  
         if classified == False and result[0] == 'TIME':
             classified = True
             send_message(channel, "Do you wanna start a schedule: yes or no?")
-        elif classified == True:
+        elif classified == True and result[0] == 'TIME':
             if text[0].lower() == 'y':
                 send_message(channel, "What do you want the date and time to be?")
                 q1 = True
                 return
             elif text[0].lower() == 'n':
-                send_message(channel, "Okay, type something new to be classified")
                 classified = False
+                result = None
                 send_message(channel, "Here is your schedule: ")
                 for event in schedule:
                     send_message(channel, f"{event.get_date_time()}:  {event.get_event_description()}")
+                send_message(channel, "Type something new to be classified")
                 return
             if q1:
                 date_time = text
@@ -170,12 +197,52 @@ def on_message(ws, message):
                         schedule.append(new_event)
                         send_message(channel, f"Event added to your schedule: {schedule[len(schedule)-1].get_date_time()} {schedule[len(schedule)-1].get_event_description()}")
                         break
-            flag = send_message(channel, "Want to continue: yes or no? ")
+            send_message(channel, "Want to continue: yes or no? ")
+            
+        #Weather section of the app
+        if classified == False and result[0] == 'WEATHER':
+            classified = True
+            send_message(channel, "What is the zipcode of your desired weather?")
+        elif classified == True and result[0] == 'WEATHER':
+            if w1:
+                w = Weather(text)
+                send_message(channel, "Okay, do you want the full report or a specific? (enter the corresponding number)")
+                send_message(channel, "1. Temp 2. Description 3. Wind Speed 4. Humidity 5. Full report")
+                w1 = False
+                w2 = True
+                return
+            if w2:
+                if text == "1":
+                    send_message(channel, f"Temp: {w.get_temp()}F")
+                elif text == "2":
+                    send_message(channel, f"Description: {w.get_weather_description()}")
+                elif text == "3":
+                    send_message(channel, f"Wind Speed: {w.get_wind_speed()} mph")
+                elif text == "4":
+                    send_message(channel, f"Humidity: {w.get_humidity()}")
+                elif text == "5":
+                    send_message(channel, f"{w.get_weather()}")
+                elif text.lower() == "d":
+                    w1 = True
+                    w2 = False
+                    classified == False
+                    result = None
+                    return
+                send_message(channel, "Choose another detail or press 'd' to be done.")
+                
+                    
     
     # Finish training if requested.
-    elif text.lower() == 'done' and testing_time == True:
+    elif text.lower() == 'done':
+        if testing_time:
+            send_message(channel, "OK, I'm done testing")
         testing_time = False
-        send_message(channel, "OK, I'm finished testing")            
+        if training_time:
+            send_message(channel, "OK, I'm done training")
+        training_time = False
+        if scheduler_time:
+            send_message(channel, "OK, scheduler app will now close")
+        scheduler_time = False            
 
 def on_error(ws, error):
     print(error)
