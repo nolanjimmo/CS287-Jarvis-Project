@@ -20,7 +20,7 @@ def load_data(filename):
 
     Returns
     -------
-    None.
+    dataframe
     
     """
     return(pd.read_csv("raw_data/" + filename))
@@ -160,7 +160,7 @@ def explore_data(final_suicides, final_2015):
     final_2015.drop('Alcohol', axis = 1, inplace = True)
     # Total expenditure was dropped because it had no values 
     final_2015.drop('Total expenditure', axis = 1, inplace = True)
-    # Precentave expenditure as dropped because it was either zero or NA for 2015
+    # Precentage expenditure was dropped because it was either zero or NA for 2015
     final_2015.drop('percentage expenditure', axis = 1, inplace = True)
     
     """
