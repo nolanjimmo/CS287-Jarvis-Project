@@ -145,7 +145,6 @@ def explore_data(final_suicides, final_2015):
                     plt.title("Frame " + str(frame_num) + " " + col + " Count")
                     plt.hist(frame[col], bins = 'auto')
                     plt.show()
-                    pass
                 except TypeError:
                     invalid_hist_list.append(col)
                 except ValueError:
