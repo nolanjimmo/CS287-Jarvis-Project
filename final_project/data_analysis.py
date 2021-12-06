@@ -43,13 +43,12 @@ def data_selection(df):
     suicide_counts = {country:df[df['country'] == country]['suicides_no'].sum() for country in df.country.unique()} 
     # Order the dictionary
     ordered_suicide_counts = {key: values for key, values in sorted(suicide_counts.items(), key=lambda item: item[1])}
-    
     # Gather the extremas and midpoints and display them for countries to be
     # selected for analysis 
     countries = list(ordered_suicide_counts.keys())
     counts = list(ordered_suicide_counts.values())
     
-    print("\nExtrama Counts: ")
+    print("\nExtrema Counts: ")
     for i in range(1,3):
         print(str(countries[-i]) + ": " + str(counts[-i]))
         print(str(countries[i-1]) + ": " + str(counts[i-1]))
