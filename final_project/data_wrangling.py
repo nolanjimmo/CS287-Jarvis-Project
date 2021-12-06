@@ -147,8 +147,10 @@ def explore_data(final_suicides, final_2015):
                     plt.show()
                 except TypeError:
                     invalid_hist_list.append(col)
+                    plt.clf()
                 except ValueError:
                     invalid_hist_list.append(col)
+                    plt.clf()
         frame_num += 1
         
         print(nan_dict)
