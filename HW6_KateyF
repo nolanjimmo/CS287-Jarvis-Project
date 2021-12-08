@@ -1,0 +1,426 @@
+# Homework 06
+# Katey Forsyth
+
+"""
+In order:
+    functions
+    P1
+        Size of VADER lexicon
+    P2
+        Categorize tweets into corpora
+        Find numbers for contigency table
+        Find polarity scores
+        Create tidy csv file
+    P3
+        Descriptive statistics 
+        Histograms
+        ECDF plots
+    P4
+    
+"""
+
+
+#################### PLEASE PLACE ALL IMPORTS HERE #####################
+import nltk
+nltk.download('vader_lexicon')
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import json
+import gzip
+import pandas as pd
+import csv
+import matplotlib.pyplot as plt
+import numpy as np
+import datetime
+import random
+########################################################################
+
+
+################ PLEASE DEFINE ANY HERE FUNCTIONS HERE #################
+
+def load_Twitter_data():
+    #List to store tweet objects 
+    #Note: all_tweets is a list of lists of dictionaries 
+    all_tweets = []
+    f_bracket = 0
+    b_bracket = 0
+    num_error = 0
+    count = 0
+    #Download and store data in tweet_dict
+    filename = "HW04_twitterData.json.txt.gz"
+    for line in gzip.open(filename, 'rt', encoding = 'utf-8'):
+        
+        if line[0] != '{':
+            line = '{' + line
+            f_bracket += 1
+            num_error += 1
+        if line[-2] != '}':
+            line = line[:-1] + '}' + line[-1]
+            b_bracket += 1
+            num_error += 1
+            
+         
+        #Import line as a tweet, make it all lowercase for sanitizing
+        #original_tweet is a dictionary
+        original_tweet = json.loads(line.strip())
+        
+        #tweet is a list of two dictionaries
+        tweet = {"ID": count,"created_at":original_tweet["created_at"], "text":original_tweet["text"].replace('\r', '')}
+        count += 1
+        all_tweets.append(tweet)
+    return all_tweets
+
+def contains_obama(text):
+    """Checks the string `text` for mention of Obama. Is case-insensitive.
+"""
+    text = text.lower() # good idea or not...
+    if "obama" in text or "barack" in text:
+        return True 
+    return False
+
+def contains_romney(text):
+    """Checks the string `text` for mention of Romney. Is case-insensitive.
+"""
+    text = text.lower()
+    if "romney" in text or "mitt" in text:
+        return True 
+    return False
+
+def hw4_obama(all_tweets):
+    
+    #List to store the Obama tweets
+    obama_tweets = []
+    
+    obama_options = ["obama", "barack"]
+    for tweet in all_tweets:
+        for o in obama_options:
+            if o in tweet["text"]:
+                obama_tweets.append(tweet)
+        
+    return obama_tweets      
+ 
+ 
+def hw4_romney(all_tweets):
+    #List to store the Romney tweets 
+    romney_tweets = []
+    
+    romney_options = ["mitt", "romney"]
+    for tweet in all_tweets:
+        for r in romney_options:
+            if r in tweet["text"]:
+                romney_tweets.append(tweet)
+    return romney_tweets
+
+def hw4_obama_boolean(tweet_text):
+    tweet_text = tweet_text.lower()
+    obama_options = ["obama", "barack"]
+    for option in obama_options:
+        if option in tweet_text:
+            return True
+    
+    return False
+
+def hw6_obama_boolean(tweet_text):
+    tweet_text = tweet_text.lower()
+    obama_options = ["obama", "barack"]
+    for option in obama_options:
+        if option in tweet_text:
+            return True
+    
+    return False
+
+def hw4_romney_boolean(tweet_text):
+    tweet_text = tweet_text.lower()
+    romney_options = ["mitt", "romney"]
+    for option in romney_options:
+        if option in tweet_text:
+            return True
+    
+    return False
+
+def hw6_romney_boolean(tweet_text):
+    tweet_text = tweet_text.lower()
+    romney_options = ["mitt", "romney"]
+    for option in romney_options:
+        if option in tweet_text:
+            return True
+    
+    return False
+    
+
+def add_polarity_score(tweet_list):
+    for tweet in tweet_list:
+        polarity_score = analyzer.polarity_scores(tweet["text"])
+        tweet.update(polarity_score)
+    return tweet_list
+
+def getScore(tweet_list):
+    score = []
+    for tweet in tweet_list:
+        polarity_score = analyzer.polarity_scores(tweet["text"])
+        score.append(polarity_score)
+    return score
+
+
+def add_corpora(tweet_list, corpora_name):
+    for tweet in tweet_list:
+        tweet.update({"corpora": corpora_name})
+    return tweet_list
+      
+
+def make_ID(tweet_list):
+    length = len(tweet_list)
+    ID = list(range(1, length+1))
+    return ID
+
+def load_tidy():
+    tweet_list = []
+    with open("OR_tweet_scores_[kjforsyt].csv", newline='') as csvfile:
+      testreader = csv.reader(csvfile, delimiter=',')
+      for row in testreader:
+          tweet = {"ID": row[0], "created_at": row[1], "text": row[2], "hw4_O": row[3],
+                   "hw4_R": row[4], "hw6_O": row[5], "hw6_R": row[6], "neg": row[7], 
+                   "neu":row[8], "pos":row[9], "comp":row[10]}
+          tweet_list.append(tweet)
+    
+    return tweet_list
+
+
+
+##################### ORGANIZE YOUR WORK HERE ##########################
+######### Using P.x header comments to separate code blocks ############
+########################################################################
+
+
+######## P.1 ###########################################################
+
+analyzer = SentimentIntensityAnalyzer()
+#From vader_lexicon.txt file on Github:
+LEN_LEXICON = 7520
+print("There are", LEN_LEXICON, "tokens in the VADER lexicon.")
+
+
+######## P.2 ###########################################################
+
+
+#Load Twitter data file 
+tweet_data = load_Twitter_data()
+#Call functions to divide corpus 
+
+O_tweets = []
+R_tweets = []
+for tweet in tweet_data:
+    text = tweet["text"]
+    if contains_obama(text):
+        O_tweets.append(tweet) 
+    if contains_romney(text):
+        R_tweets.append(tweet)
+        
+hw4_O_tweets = hw4_obama(tweet_data)
+hw4_R_tweets = hw4_romney(tweet_data)
+
+
+#Contigency table
+tweets_df = pd.DataFrame(tweet_data)
+tweets_df['hw4_O'] = [hw4_obama_boolean(g) for g in tweets_df["text"]]
+tweets_df['hw4_R'] = [hw4_romney_boolean(g) for g in tweets_df["text"]]
+tweets_df['hw6_O'] = [hw6_obama_boolean(g) for g in tweets_df["text"]]
+tweets_df['hw6_R'] = [hw6_romney_boolean(g) for g in tweets_df["text"]]
+
+print("Q1", len(tweets_df[(tweets_df["hw4_O"] == True) & (tweets_df["hw6_O"]== True)]))
+
+print("Q2", len(tweets_df[(tweets_df["hw4_O"] == True) & (tweets_df["hw6_R"]== True)]))
+
+print("Q3", len(tweets_df[(tweets_df["hw4_R"] == True) & (tweets_df["hw6_O"]== True)]))
+
+print("Q4", len(tweets_df[(tweets_df["hw4_R"] == True) & (tweets_df["hw6_R"]== True)]))
+
+
+
+#Make dataframe of polarity scores 
+scores = getScore(tweet_data)
+polarity_df = pd.DataFrame(scores)
+
+#Combine polarity score dataframe and tweet_df
+full_data = pd.concat([tweets_df, polarity_df], axis = 1)
+
+#To find size of table, use print statement 
+print(full_data)
+
+
+#Create tidy csv file
+full_data.to_csv("OR_tweet_scores_[kjforsyt].csv", index = False, header = True)
+
+#Make sure tidy csv file is readable with load_tidy()
+tidy_data = load_tidy()
+
+######## P.3###########################################################
+#Comparing O vs. R corporus 
+all_obama = full_data[(tweets_df["hw4_O"] == True) & (full_data["hw6_O"]== True)]
+all_romney = full_data[(tweets_df["hw4_R"] == True) & (full_data["hw6_R"]== True)]
+print("Number of Tweets about Obama: ",len(all_obama))
+print("Number of Tweets about Romney: ", len(all_romney))
+
+#Summary stats
+print(all_obama.describe())
+print(all_romney.describe())
+
+obama_neu = full_data[(tweets_df["hw4_O"] == True) & (full_data["hw6_O"]== True) & (full_data["neu"]==1)]
+print("Number of Tweets about Obama with neu = 1: ",len(obama_neu))
+
+romney_neu = full_data[(tweets_df["hw4_R"] == True) & (full_data["hw6_R"]== True) & (full_data["neu"]==1)]
+print("Number of Tweets about Romney with neu = 1: ",len(romney_neu))
+
+#Histogram of composite scores for O and R tweets 
+
+plt.title("Obama-Compound")
+plt.hist(all_obama["compound"], bins = 15, color = "blue")
+
+plt.title("Romney-Compound")
+plt.hist(all_romney["compound"], bins = 15, color = "red")
+
+
+plt.title("Obama & Romney-Compound")
+plt.hist(all_obama["compound"], bins = 15, color = "blue")
+plt.hist(all_romney["compound"], bins = 15, color = "red")
+
+
+#Histogram of pos scores for O and R tweets 
+plt.title("Obama-Pos")
+plt.hist(all_obama["pos"], bins = 20)
+
+plt.title("Romney-Pos")
+plt.hist(all_romney["pos"], bins = 20)
+
+plt.title("Obama & Romney-Positive")
+plt.hist(all_obama["pos"], bins = 20, color = "blue")
+plt.hist(all_romney["pos"], bins = 20, color = "red")
+
+##Histogram of neg scores for O and R tweets 
+plt.title("Obama-Neg")
+plt.hist(all_obama["neg"], bins = 25)
+
+plt.title("Romney-Neg")
+plt.hist(all_romney["neg"], bins = 25)
+
+plt.title("Obama & Romney-Negative")
+plt.hist(all_obama["neg"], bins = 25, color = "blue")
+plt.hist(all_romney["neg"], bins = 25, color = "red")
+
+##Histogram of neg scores for O and R tweets 
+plt.title("Obama-Neu")
+plt.hist(all_obama["neu"], bins = 30)
+
+plt.title("Romney-Neu")
+plt.hist(all_romney["neu"], bins = 30)
+
+
+plt.title("Obama & Romney-Neutral")
+plt.hist(all_obama["neu"], bins = 30, color = "blue")
+plt.hist(all_romney["neu"], bins = 30, color = "red")
+
+
+
+
+
+#ECDF Plots for compound scores  
+X = sorted(all_romney["compound"])
+Y = np.arange(len(all_romney))/len(all_romney)
+plt.title("ECDF: Romney compound")
+plt.plot(X,Y)
+plt.show()
+
+X = sorted(all_obama["compound"])
+Y = np.arange(len(all_obama))/len(all_obama)
+plt.title("ECDF: Obama compound")
+plt.plot(X,Y)
+plt.show()
+
+#ECDF Plots for neg scores  
+X = sorted(all_romney["neg"])
+Y = np.arange(len(all_romney))/len(all_romney)
+plt.title("ECDF: Romney neg")
+plt.plot(X,Y)
+plt.show()
+
+X = sorted(all_obama["neg"])
+Y = np.arange(len(all_obama))/len(all_obama)
+plt.title("ECDF: Obama neg")
+plt.plot(X,Y)
+plt.show()
+
+#ECDF Plots for neutral scores  
+X = sorted(all_romney["neu"])
+Y = np.arange(len(all_romney))/len(all_romney)
+plt.title("ECDF: Romney neu")
+plt.plot(X,Y)
+plt.show()
+
+X = sorted(all_obama["neu"])
+Y = np.arange(len(all_obama))/len(all_obama)
+plt.title("ECDF: Obama neu")
+plt.plot(X,Y)
+plt.show()
+
+#ECDF Plots for pos scores  
+X = sorted(all_romney["pos"])
+Y = np.arange(len(all_romney))/len(all_romney)
+plt.title("ECDF: Romney pos")
+plt.plot(X,Y)
+plt.show()
+
+X = sorted(all_obama["pos"])
+Y = np.arange(len(all_obama))/len(all_obama)
+plt.title("ECDF: Obama pos")
+plt.plot(X,Y)
+plt.show()
+
+
+#ECDF Compound score for both candidates on one plot
+
+X1 = sorted(all_romney["compound"])
+Y1 = np.arange(len(all_romney))/len(all_romney)
+
+
+X2 = sorted(all_obama["compound"])
+Y2 = np.arange(len(all_obama))/len(all_obama)
+plt.title("ECDF: Romney & Obama compound")
+plt.plot(X2,Y2, color = "blue", markersize = 2)
+plt.plot(X1,Y1, color = "red", markersize = 2)
+plt.show()
+
+
+######## P.4 ###########################################################
+
+#Time series plots 
+#Convert "created_at" column to datetime objects
+# full_data["created_at"] = pd.to_datetime(full_data["created_at"], 
+#                                          format = "%a, %d %b %Y %H:%M:%S")
+
+# # dates = pd.date_range(start = '2012-10-23', end = '2012-11-08', periods = 3)
+
+# d1 = datetime.date(2012,10,23)
+# d2 = datetime.date(2012,10,31)
+# d3 = datetime.date(2012,11,8)
+
+#Use small sampleof random tweets to keep graph uncluttered 
+# random_tweets_O = all_obama.sample(n =100)
+# random_tweets_R = all_romney.sample(n = 100)
+
+# plt.title("Obama compound score over time")
+# plt.ylabel("Compound score")
+# plt.xlabel("Time")
+# plt.xticks(ticks = [])
+# plt.plot(random_tweets_O["created_at"], random_tweets_O["compound"], color = "blue")
+
+# plt.title("Romney compound score over time")
+# plt.ylabel("Compound score")
+# plt.xlabel("Time")
+# plt.xticks(ticks = [])
+# plt.plot(random_tweets_R["created_at"], random_tweets_R["compound"], color = "red")
+
+# # plt.title("Romney & Obama compound score over time")
+# # plt.ylabel("Compound score")
+# # plt.xlabel("Time")
+# # plt.xticks(ticks = [])
+# # plt.plot(random_tweets_O["created_at"], random_tweets_O["compound"], color = "blue")
+# # plt.plot(random_tweets_R["created_at"], random_tweets_R["compound"], color = "red")
