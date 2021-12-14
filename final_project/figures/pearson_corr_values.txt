@@ -1,0 +1,27 @@
+
+pearson correlation values:
+
+Japan
+Alcohol: 0.64931
+BMI: -0.85788
+Health Spending: 0.86932
+
+Russian Federation
+Alcohol: 0.84118
+BMI: -0.98457
+Health Spending: -0.86471
+
+Finland
+Alcohol: 0.88941
+BMI: 0.07836
+Health Spending: -0.78031
+
+Grenada
+Alcohol: 0.35058
+BMI: -0.86431
+Health Spending: -0.63346
+
+Seychelles
+Alcohol: 0.11007
+BMI: -0.28548
+Health Spending: 0.01640
