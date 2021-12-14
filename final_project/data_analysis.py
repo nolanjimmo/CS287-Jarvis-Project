@@ -27,7 +27,7 @@ def load_data(filename):
     """
     return(pd.read_csv("data/merged_data/" + filename))
 
-df = load_data("data/merged_data/merged_suicide.csv")
+df = load_data("merged_suicide.csv")
 
 def correlation_coefficient(X,Y):
     #referenced algorithm idea from:
