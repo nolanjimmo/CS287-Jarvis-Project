@@ -23,7 +23,7 @@ def load_data(filename):
     dataframe
     
     """
-    return(pd.read_csv("raw_data/" + filename))
+    return(pd.read_csv("data/raw_data/" + filename))
     
 def data_extraction():
     """ 
@@ -202,8 +202,8 @@ def save_to_csv(f_s_frame, f_2015_frame):
     None
     """
     
-    f_s_frame.to_csv('merged_data/merged_suicide.csv')
-    f_2015_frame.to_csv('merged_data/merged_2015.csv')
+    f_s_frame.to_csv('data/merged_data/merged_suicide.csv')
+    f_2015_frame.to_csv('data/merged_data/merged_2015.csv')
     
 
 data_extraction()
