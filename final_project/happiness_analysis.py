@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import csv
 
 ### LOAD DATA
-df = pd.read_csv("merged_data/merged_2015.csv")
+df = pd.read_csv("data/merged_data/merged_2015.csv")
 
 ### PROCESS DATA
 
