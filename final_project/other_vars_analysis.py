@@ -66,7 +66,7 @@ def graphing_linear(x_name, target):
 #main
 #Load merged_2015 table into pandas data frame
 
-merged_2015_df = pd.read_csv("data/merged_2015.csv")
+merged_2015_df = pd.read_csv("data/merged_data/merged_2015.csv")
 #merged_2015_df.info()
 
 #Replace column names such that there are no leading/trailing spaces, all lowercase, and have _ where spaces once were
